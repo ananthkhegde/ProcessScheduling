@@ -1,12 +1,9 @@
 package org.iiitb.process.controller;
 
 public class processintervalexecutiontime {
-	public processintervalexecutiontime() {
-		super();
 	
-		
-	}
 	private int pid;
+	private String pname;
 	private int arrivaltime;
 	private int finishtime;
 	
@@ -29,8 +26,11 @@ public class processintervalexecutiontime {
 	public void setFinishtime(int finishtime) {
 		this.finishtime = finishtime;
 	}
-	
-	
-	
-	
+	public String getPname() {
+		return pname;
+	}
+	public void setPname(String pname) {
+		this.pname = pname;
+	}
+
 }

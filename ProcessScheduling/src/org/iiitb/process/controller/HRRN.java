@@ -1,7 +1,9 @@
 package org.iiitb.process.controller;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.iiitb.model.bean.ProcessBean;
 import org.iiitb.model.bean.TimeQuantum;
 import org.iiitb.process.model.OutputProcessBean;
@@ -12,16 +14,17 @@ public class HRRN implements IScheduler {
 	
 	
 	@SuppressWarnings("deprecation")
+	
 	public ProcessOutputParamaters Schedule(List<ProcessBean> processList)
 	{
-		System.out.println(processList.size());
+		
 		int pid;
 		String pName;
-		int p,index,burstTime;
-		java.util.Date arrivalTime;
 		TimeQuantum timequant;
 		List<TimeQuantum> burstList;
-		float completionTime,waitingTime,totalwaitingtime = 0,turnaroundTime,totalturnaroundTime = 0;
+		int p,index,burstTime;
+		java.util.Date arrivalTime;
+		float completionTime;
 		Collections.sort(processList, new ArrivalTimeComparator());
 	
 		// trying populate common utilities Data structure
@@ -34,28 +37,23 @@ public class HRRN implements IScheduler {
 		for(int count = 0;count<processList.size();count++)
 		{
 			readylist.add(processList.get(count));
-			
-			
 		}
-	
+
 		List<OutputProcessBean>ProcessoutputList;
 		ProcessoutputList = new ArrayList<OutputProcessBean>();
 		OutputProcessBean processoutput;
-		
 		processoutput = new OutputProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
-				
 		ProcessOutputParamaters processoutputparameters;
 		processoutputparameters = new ProcessOutputParamaters();
 		while(!readylist.isEmpty())
 		{
-			
 			if(ProcessoutputList.isEmpty())
 			{
 				if(readylist.get(0).getArrivalTime().getMinutes()==0)
 				{
 					current = new ProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
 					processoutput = new OutputProcessBean(readylist.get(0).getPid(),readylist.get(0).getpName());
-					completionTime=readylist.get(0).getBurstList().get(0).getQuantum();
+					completionTime=readylist.get(0).getBurstList().get(0).getQuantum();;
 					processoutput.setCompletiontime(completionTime);
 					ProcessoutputList.add(processoutput);
 					pid=readylist.get(0).getPid();
@@ -65,7 +63,11 @@ public class HRRN implements IScheduler {
 					arrivalTime=readylist.get(0).getArrivalTime();
 					current.setArrivalTime(arrivalTime);
 					burstTime=(int)readylist.get(0).getBurstList().get(0).getQuantum();
-					current.getBurstList().get(0).setQuantum(burstTime);
+					timequant = new TimeQuantum();
+					timequant.setQuantum(burstTime);
+					burstList = new ArrayList<TimeQuantum>();
+		        	burstList.add(timequant);
+		        	current.setBurstList(burstList);
 					blockedlist.add(current);
 					readylist.remove(0);
 				}
@@ -81,7 +83,7 @@ public class HRRN implements IScheduler {
 					current.setpName(pName);
 					arrivalTime=readylist.get(0).getArrivalTime();
 					current.setArrivalTime(arrivalTime);
-					burstTime=(int)readylist.get(0).getBurstList().get(0).getQuantum();;
+					burstTime=(int)readylist.get(0).getBurstList().get(0).getQuantum();
 					timequant = new TimeQuantum();
 					timequant.setQuantum(burstTime);
 					burstList = new ArrayList<TimeQuantum>();
@@ -90,80 +92,38 @@ public class HRRN implements IScheduler {
 					blockedlist.add(current);
 					readylist.remove(0);
 				}
-				
 			}
 			else
 			{
 				current = new ProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
 				processoutput = new OutputProcessBean(readylist.get(0).getPid(),readylist.get(0).getpName());			
 				p=priority(readylist,ProcessoutputList, readylist.size());
-				
 				index=ProcessoutputList.size()-1;
-			
 				completionTime=ProcessoutputList.get(index).getCompletiontime()+readylist.get(p).getBurstList().get(0).getQuantum();
-				
 				processoutput.setCompletiontime(completionTime);
 				ProcessoutputList.add(processoutput);
-				
 				pid=readylist.get(p).getPid();
 				current.setPid(pid);
 				pName=readylist.get(p).getpName();
 				current.setpName(pName);
 				arrivalTime=readylist.get(p).getArrivalTime();
 				current.setArrivalTime(arrivalTime);
-				burstTime=(int)readylist.get(0).getBurstList().get(0).getQuantum();
-				current.getBurstList().get(0).setQuantum(burstTime);
-				//current.setburstTime(burstTime);
+				burstTime=(int)readylist.get(p).getBurstList().get(0).getQuantum();
+				timequant = new TimeQuantum();
+				timequant.setQuantum(burstTime);
+				burstList = new ArrayList<TimeQuantum>();
+	        	burstList.add(timequant);
+	        	current.setBurstList(burstList);
 				blockedlist.add(current);
-				
 				readylist.remove(p);		
-				
-				
-				
+				}
 			}
-			
-		}
-			
-	for(int m=0;m<blockedlist.size();m++)
-		{
-			current = new ProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
-			processoutput = new OutputProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
-		
-			if(m==0)
-			{
-				waitingTime=0;
-				
-				processoutput.setWaitingTime(waitingTime);
-				turnaroundTime=waitingTime+blockedlist.get(0).getBurstList().get(0).getQuantum();
-				processoutput.setTurnaroundTime(turnaroundTime);
-				ProcessoutputList.add(processoutput);
-			}
-			else
-			{	
-				waitingTime = ProcessoutputList.get(m-1).getCompletiontime() - blockedlist.get(m).getArrivalTime().getMinutes() ;
-				
-				totalwaitingtime+=waitingTime;
-				processoutput.setWaitingTime(waitingTime);
-				turnaroundTime=waitingTime+blockedlist.get(m).getBurstList().get(0).getQuantum();
-				processoutput.setTurnaroundTime(turnaroundTime);
-				totalturnaroundTime+=turnaroundTime;
-				ProcessoutputList.add(processoutput);
-			}
-			
-			
-	}	
 	
-	processoutputparameters.setProcessoutputList(ProcessoutputList);
-	processoutputparameters.setAveragewaitingTime(totalwaitingtime/ProcessoutputList.size());
-	processoutputparameters.setNetTurnaroundTime(totalturnaroundTime/ProcessoutputList.size());
-	System.out.println("avgwt "+processoutputparameters.getAveragewaitingTime()+"\tavgtat "+processoutputparameters.getNetTurnaroundTime());
-	
+		processoutputparameters = CalculateParameters(processList,ProcessoutputList);	
 		blockedlist.remove(0);
-	
 		current=new ProcessBean(processList.get(0).getPid(),processList.get(0).getpName());
 		int time = 3;
 		SnapShotUtility.ViewSnapHot(blockedlist, current, mainlist, time);
-		
 		while(blockedlist.size()>0)
 		{
 			current=new ProcessBean(blockedlist.get(0).getPid(),blockedlist.get(0).getpName());
@@ -171,7 +131,63 @@ public class HRRN implements IScheduler {
 			SnapShotUtility.ViewSnapHot(blockedlist, current, mainlist, time);
 			
 		}
+		return processoutputparameters;
+	}
 	
+	@SuppressWarnings("deprecation")
+	public ProcessOutputParamaters CalculateParameters(List<ProcessBean> processlist,List<OutputProcessBean> procoutList)
+	{
+		TimeQuantum timequant;
+		List<TimeQuantum> burstList;
+		long waitingtime,totalwaitingtime = 0,turnaroundtime,totalturnaroundtime = 0;
+		ProcessOutputParamaters processoutputparameters;
+		List<OutputProcessBean>ProcessoutputmainList;
+		processoutputparameters = new ProcessOutputParamaters();
+		OutputProcessBean processoutput;
+		ProcessoutputmainList = new ArrayList<OutputProcessBean>();
+		processoutput = new OutputProcessBean(processlist.get(0).getPid(),processlist.get(0).getpName());
+		for(int m=0;m<processlist.size();m++)
+		{
+			processoutput = new OutputProcessBean(processlist.get(m).getPid(),processlist.get(m).getpName());
+			if(m==0)
+			{
+				waitingtime=0;
+				processoutput.setWaitingTime(waitingtime);
+				processoutput.setArrivalTime(processlist.get(0).getArrivalTime());
+			
+				timequant = new TimeQuantum();
+				timequant.setQuantum(processlist.get(0).getBurstList().get(0).getQuantum());
+				burstList = new ArrayList<TimeQuantum>();
+	        	burstList.add(timequant);
+	        	processoutput.setBurstList(burstList);
+				processoutput.setCompletiontime(procoutList.get(0).getCompletiontime());
+				turnaroundtime=waitingtime+processlist.get(0).getBurstList().get(0).getQuantum();
+				processoutput.setTurnaroundTime(turnaroundtime);
+				ProcessoutputmainList.add(processoutput);
+			}
+			else
+			{
+				waitingtime = (long) (procoutList.get(m-1).getCompletiontime() - processlist.get(m).getArrivalTime().getMinutes()) ;
+				totalwaitingtime+=waitingtime;
+				processoutput.setWaitingTime(waitingtime);
+				processoutput.setArrivalTime(processlist.get(0).getArrivalTime());
+				
+					timequant = new TimeQuantum();
+					timequant.setQuantum(processlist.get(m).getBurstList().get(0).getQuantum());
+					burstList = new ArrayList<TimeQuantum>();
+		        	burstList.add(timequant);
+		        	processoutput.setBurstList(burstList);
+				turnaroundtime=waitingtime+processlist.get(m).getBurstList().get(0).getQuantum();;
+				processoutput.setTurnaroundTime(turnaroundtime);
+				totalturnaroundtime+=turnaroundtime;
+				ProcessoutputmainList.add(processoutput);
+			}
+				
+	}	
+	processoutputparameters.setProcessoutputList(ProcessoutputmainList);
+	processoutputparameters.setAveragewaitingTime(totalwaitingtime/ProcessoutputmainList.size());
+	processoutputparameters.setNetTurnaroundTime(totalturnaroundtime/ProcessoutputmainList.size());	
+		
 		return processoutputparameters;
 	}
 	@SuppressWarnings("deprecation")
@@ -180,16 +196,14 @@ public class HRRN implements IScheduler {
 		int l=0,index;
 		float waitingtime=0,bursttime;
 		double p, min=0.0;
-		
-		
-	
+			
 		index=mainlist.size()-1;
 		for(int i=0;i<size;i++)
 		{
 	
 			waitingtime=mainlist.get(index).getCompletiontime()-readylist.get(i).getArrivalTime().getMinutes();
 	
-			bursttime=readylist.get(i).getBurstList().get(0).getQuantum();
+			bursttime=readylist.get(i).getBurstList().get(0).getQuantum();;
 			p=(waitingtime+bursttime)/bursttime;
 			if(min<p)
 			{

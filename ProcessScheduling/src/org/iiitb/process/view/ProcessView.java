@@ -18,22 +18,28 @@ public class ProcessView {
 	 */
 	public static void main(String[] args) throws IOException{
 		//user input in command prompt
-		int processCount,count = 0,pId,arrivalTime,burstTime,SheduleTyp;
+		int processCount,count = 0,pId,arrivalTime,burstTime,SheduleTyp,priority;
 		String pName;
 		ProcessOutputParamaters processoutputparameters;
 		List<ProcessBean> processList=new ArrayList<ProcessBean>();
 		List<TimeQuantum> burstList;
 		TimeQuantum timequant;
-		System.out.println("Please enter number of process");
+		
+		
         Scanner inputReader = new Scanner(System.in);
-        
+        System.out.println("Please Choose the algorithm from the below choice");
+        System.out.println("1-FCFS\n2-SJF\n3-SRT\n4-Preemptive Priority\n5-NonPreemptivePriority\n6-RR\n7-HRRN");
+        SheduleTyp = inputReader.nextInt();
+        ScheduleType st = GetScheduler(SheduleTyp);
         //Getting input in integer format
+        System.out.println("Please enter number of process");
         processCount = inputReader.nextInt();
-        
+        int processid = 0;
         for(count = 0;count<processCount;++count)
         {
         	pName = "p" + (count+1);
-        	pId = count;//inputReader.nextInt();
+        	processid++;
+        	pId = processid;//inputReader.nextInt();
         	ProcessBean processbean  = new ProcessBean(pId,pName);
         	System.out.println("Please arrival time for the process p" + (count+1));
         	arrivalTime = inputReader.nextInt();
@@ -48,17 +54,27 @@ public class ProcessView {
         	burstList = new ArrayList<TimeQuantum>();
         	burstList.add(timequant);
         	processbean.setBurstList(burstList);
+        	if((st == ScheduleType.PREMPTIVEPRIORITY) || (st == ScheduleType.NONPREMPTIVEPRIORITY))
+        	{
+        		System.out.println("Please Priority for the process p" + (count+1));
+        		priority = inputReader.nextInt();
+        		processbean.setPriority(priority);
+        	}
         	processList.add(processbean);
         	
         }
-        System.out.println("Please Choose the algorithm from the below choice");
-        System.out.println("1-FCFS\n2-SJF\n3-SRT\n4-Preemptive Priority\n5-NonPreemptivePriority\n6-RR\n7-HRRN");
-        SheduleTyp = inputReader.nextInt();
+      if(processList.size()>0)
+      {
         ProcessesScheduler ps = new ProcessesScheduler();
-       ScheduleType st = GetScheduler(SheduleTyp);
         processoutputparameters= ps.Schedule(processList,st);
         TableView tv = new TableView();
        tv.start(processoutputparameters);
+       if(!(processoutputparameters.getProcessinterval()==null))
+       {
+       GanttChartView gv = new GanttChartView();
+       gv.start(processoutputparameters);
+       }
+      }
        
 	}
 	

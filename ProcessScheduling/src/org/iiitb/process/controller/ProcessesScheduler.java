@@ -37,6 +37,8 @@ public  class ProcessesScheduler {
          break;
          case SRT:  ISchedule = new SRT();
          break;
+         case RR:  ISchedule = new RoundRobin();
+         break;
          default: 
          throw new IllegalArgumentException("Invalid Scheduler name: " + scheduletyp);
      }
