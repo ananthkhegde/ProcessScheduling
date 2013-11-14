@@ -26,19 +26,16 @@ public class ProcessView {
 		TimeQuantum timequant;
 		System.out.println("Please enter number of process");
         Scanner inputReader = new Scanner(System.in);
-     
+        
         //Getting input in integer format
         processCount = inputReader.nextInt();
         
         for(count = 0;count<processCount;++count)
         {
-	
-        	System.out.println("Please enter process name");
-        	pName = inputReader.next();
-        	System.out.println("Please enter process id");
-        	pId = inputReader.nextInt();
+        	pName = "p" + (count+1);
+        	pId = count;//inputReader.nextInt();
         	ProcessBean processbean  = new ProcessBean(pId,pName);
-        	System.out.println("Please arrival time for the process");
+        	System.out.println("Please arrival time for the process p" + (count+1));
         	arrivalTime = inputReader.nextInt();
         	@SuppressWarnings("deprecation")
 			Date date = new Date(2013,10,0,0,arrivalTime);
