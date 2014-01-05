@@ -20,7 +20,7 @@ public class PreemptivePriority implements IScheduler{
 		List<ProcessBean> blockedlist = new ArrayList<ProcessBean>();
 		List<ProcessBean> currentsortlist = new ArrayList<ProcessBean>();
 		int[] completiontime= new int[(processList.size()+1)];
-		ProcessBean current,previous =new ProcessBean(-1,"null");
+		ProcessBean current,noprocess=new ProcessBean(-1," "),previous =new ProcessBean(-1,"null");
 		
 		int count = 0,totalbursttime=0,totalrunningtime=0;
 		int[] bursttimeremaining=new int[processList.size()+1];
@@ -28,10 +28,19 @@ public class PreemptivePriority implements IScheduler{
 		{
 			readylist.add(processList.get(count));
 			bursttimeremaining[processList.get(count).getPid()]=(int) processList.get(count).getBurstList().get(0).getQuantum();
-			totalbursttime+=processList.get(count).getBurstList().get(0).getQuantum();
+			
+			if(count==0)
+			totalbursttime+=(processList.get(count).getBurstList().get(0).getQuantum()+processList.get(0).getArrivalTime().getMinutes());
+			else
+			{if(processList.get(count).getArrivalTime().getMinutes()>totalbursttime)
+			{
+				totalbursttime=processList.get(count).getArrivalTime().getMinutes()	;
+			}
+			totalbursttime+=(processList.get(count).getBurstList().get(0).getQuantum());
+			}
 		}
 	
-		totalrunningtime=(int) (totalbursttime+processList.get(0).getArrivalTime().getMinutes());
+		totalrunningtime=(int) (totalbursttime);
 		int k=0;
 		
 		
@@ -39,7 +48,7 @@ public class PreemptivePriority implements IScheduler{
 		for( int i=0; i<totalrunningtime;i++)
 			processinterval1[i]=new processintervalexecutiontime();
 		
-		int time = 3,flag=1,s=-1;
+		int flag=1,s=-1;
 		int j;
 		int[] firsttime=new int[processList.size()+1];
 		int i=0;
@@ -47,34 +56,38 @@ public class PreemptivePriority implements IScheduler{
 		{firsttime[i]=0;
 			i++;
 		}
+		readylist.clear();
 		k=0;
-		for(i=readylist.get(0).getArrivalTime().getMinutes();i<totalrunningtime;i++)
+		int noofprocessintime;
+		noofprocessintime=0;
+		for(i=processList.get(0).getArrivalTime().getMinutes();i<totalrunningtime;i++)
 		{
 			
 				
 			
-			for(j=0;j<readylist.size();j++)
+			for(j=0;j<processList.size();j++)
 			{
-				if (i>=(readylist.get(j).getArrivalTime().getMinutes()))
-				{
-					currentsortlist.add(readylist.get(j));
+				if (i>=(processList.get(j).getArrivalTime().getMinutes()))
+				{noofprocessintime++;
+					currentsortlist.add(processList.get(j));
+					readylist.add(processList.get(j));
 				}
 			}
-			
-			Collections.sort(currentsortlist, new prioritycomparator());
-			
-			for(count = 0;count<readylist.size();count++)
+			if(noofprocessintime!=0)
+			{Collections.sort(currentsortlist, new prioritycomparator());
+			Collections.sort(readylist, new prioritycomparator());
+			for(count = 0;count<processList.size();count++)
 			{
-				if(currentsortlist.get(0).getPid()==readylist.get(count).getPid())
+				if(currentsortlist.get(0).getPid()==processList.get(count).getPid())
 				{
 					s=count;
 					
 				}
 			
 			}
-			orderofprocesscomplete.add(readylist.get(s));
-			
-			readylist.remove(s);
+			orderofprocesscomplete.add(readylist.get(0));
+			processList.remove(s);
+			readylist.remove(0);
 			current=new ProcessBean(currentsortlist.get(0).getPid(),currentsortlist.get(0).getpName());
 			current.setArrivalTime(currentsortlist.get(0).getArrivalTime());
 			
@@ -90,7 +103,7 @@ public class PreemptivePriority implements IScheduler{
 			current.setBurstList(currentsortlist.get(0).getBurstList());
 			current.setPriority(currentsortlist.get(0).getPriority());
 			
-			SnapShotUtility.ViewSnapHot(readylist, current, blockedlist, time);
+			SnapShotUtility.ViewSnapHot(readylist, current, blockedlist, i);
 			
 			
 			
@@ -98,7 +111,7 @@ public class PreemptivePriority implements IScheduler{
 			if(flag==1)
 			{processinterval1[k].setPid(current.getPid());
 			processinterval1[k].setArrivaltime(i);
-		
+			processinterval1[k].setPname(current.getpName());
 			processinterval1[k].setFinishtime(i+1);
 				flag=0;
 				previous=current;
@@ -112,6 +125,7 @@ public class PreemptivePriority implements IScheduler{
 			}
 			else
 			{k++;
+			processinterval1[k].setPname(current.getpName());
 				processinterval1[k].setPid(current.getPid());
 			processinterval1[k].setArrivaltime(i);
 		
@@ -125,10 +139,37 @@ public class PreemptivePriority implements IScheduler{
 			orderofprocess.add(current);
 			}
 			else
-			{		readylist.add(current);
+			{		processList.add(current);
 		
 			}
 			currentsortlist.clear();
+			readylist.clear();
+			noofprocessintime=0;
+			}
+			else
+			{//current=null;previous=null;
+				if(noprocess.getPid()==previous.getPid())
+				{
+					processinterval1[k].setFinishtime(i+1);
+				
+				}
+				else{
+					k++;
+				
+				processinterval1[k].setPid(noprocess.getPid());
+				processinterval1[k].setPname(noprocess.getpName());
+			processinterval1[k].setArrivaltime(i);
+		
+			processinterval1[k].setFinishtime(i+1);
+			previous=noprocess;
+			}
+				SnapShotUtility.ViewSnapHot(readylist,noprocess, blockedlist, i);
+			}
+			if((i+1)==totalrunningtime)
+			{
+				//current=null;
+				SnapShotUtility.ViewSnapHot(readylist,noprocess, blockedlist, (i+1));
+			}
 		}
 		
 		System.out.println("Order in which process completed");
@@ -140,9 +181,15 @@ public class PreemptivePriority implements IScheduler{
 		
 
 	
+		processintervalexecutiontime[] processinterval=new processintervalexecutiontime[(k+1)];
+		
 		System.out.println("Order in which process executed with time");
 		for(count = 0;count<=k;count++)
-		{
+		{processinterval[count]=new processintervalexecutiontime();
+		processinterval[count].setArrivaltime(processinterval1[count].getArrivaltime());
+		processinterval[count].setFinishtime(processinterval1[count].getFinishtime());
+		processinterval[count].setPid(processinterval1[count].getPid());
+		processinterval[count].setPname(processinterval1[count].getPname());
 			
 			System.out.println(processinterval1[count].getArrivaltime()+" "+processinterval1[count].getPid()+" "+processinterval1[count].getFinishtime());
 		}
@@ -191,7 +238,9 @@ public class PreemptivePriority implements IScheduler{
 			outputparameters.setProcessoutputList(ProcessoutputList);
 			outputparameters.setAveragewaitingTime(totalwaitingtime/count);
 			outputparameters.setNetTurnaroundTime(totalturnaroundtime/count);
+			outputparameters.setProcessinterval(processinterval);
 			return outputparameters;
+			
 }
 
 }

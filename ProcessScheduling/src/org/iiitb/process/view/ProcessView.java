@@ -72,7 +72,17 @@ public class ProcessView {
        if(!(processoutputparameters.getProcessinterval()==null))
        {
        GanttChartView gv = new GanttChartView();
+       if(st==ScheduleType.FCFS)
+       {
        gv.start(processoutputparameters);
+       }
+      
+      
+       }
+       if ((st == ScheduleType.SJF) || (st == ScheduleType.SRT) || (st == ScheduleType.PREMPTIVEPRIORITY) || (st == ScheduleType.NONPREMPTIVEPRIORITY))
+       {
+    	   GanttChartView gv = new GanttChartView();
+    	   gv.start1(processoutputparameters);
        }
       }
        

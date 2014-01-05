@@ -100,7 +100,71 @@ public void start(ProcessOutputParamaters outputparameters)
     setLayout(new FlowLayout());
     setDefaultCloseOperation(EXIT_ON_CLOSE);
 }
-}
+public void start1(ProcessOutputParamaters outputparameters)
+{
+     
+     model = new DefaultTableModel(col,outputparameters.getProcessoutputList().size()); 
+        table=new JTable(model){@Override
+        public boolean isCellEditable(int arg0, int arg1) {
+         
+            return false;
+        }};
+       
+    JScrollPane pane = new JScrollPane(table);
+     
+    int rowcount = 0, count = 0,arrivaltime,bursttime,prevarrivaltime,totalbursttime = 0,ggap = 0,noofinterval=0;
+    while(count<outputparameters.getProcessinterval().length)
+    {
+    	for(int colcnt = 0;colcnt<5;colcnt++)
+    	{
+    		arrivaltime = outputparameters.getProcessinterval()[noofinterval].getArrivaltime();
+    		bursttime = (int)outputparameters.getProcessinterval()[noofinterval].getFinishtime();
+    		
+    		
+    		
+    		if(count ==0)
+    		{
+    			table.setValueAt(outputparameters.getProcessinterval()[noofinterval].getPname(),rowcount,colcnt);
+    		table.setValueAt("(" +arrivaltime + "-" +bursttime + ")",rowcount+1,colcnt);
+    		noofinterval++;
+    		}
+    		else
+    		{
+    			
+    			arrivaltime = outputparameters.getProcessinterval()[noofinterval].getArrivaltime();
+    			bursttime  = outputparameters.getProcessinterval()[noofinterval].getFinishtime();
+        		
+        		
+        		table.setValueAt(outputparameters.getProcessinterval()[noofinterval].getPname(),rowcount,colcnt);
+        		table.setValueAt("(" +arrivaltime + "-" +bursttime + ")",rowcount+1,colcnt);
+        		noofinterval++;	
+    		}
+    		
+    		if(count+1 == outputparameters.getProcessinterval().length)
+    		{
+    			count++;
+    			break;
+    		}
+    		//check for gap in the process
+    		
+    		count++;
+    	}
+    	rowcount++;
+    	rowcount++;
+    }
+   
+    JPanel panel = new JPanel();
+    panel.setVisible(true);
+  
+   
+    add(pane);
+    add(panel);
+    setVisible(true);
+    setSize(470,500);
+    setLayout(new FlowLayout());
+    setDefaultCloseOperation(EXIT_ON_CLOSE);
+}}
+
 
 
 

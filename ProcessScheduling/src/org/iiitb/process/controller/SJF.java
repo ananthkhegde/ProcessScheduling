@@ -8,162 +8,299 @@ import org.iiitb.process.model.OutputProcessBean;
 
 public class SJF implements IScheduler{
 	List<ProcessBean> orderofprocesscomplete = new ArrayList<ProcessBean>();
+	List<ProcessBean> orderofprocess = new ArrayList<ProcessBean>();
 	@SuppressWarnings("deprecation")
 	public ProcessOutputParamaters Schedule(List<ProcessBean> processList)
 	{
 		
-		Collections.sort(processList, new ArrivalTimeComparator());
-		List<ProcessBean> readylist = new ArrayList<ProcessBean>();
-		List<ProcessBean> currentsortlist = new ArrayList<ProcessBean>();
-		List<ProcessBean> blockedlist = new ArrayList<ProcessBean>();
 		
-		ProcessBean current;
-		int count;
+		Collections.sort(processList, new ArrivalTimeComparator());
+		// trying populate common utilities Data structure
+		List<ProcessBean> readylist = new ArrayList<ProcessBean>();
+		List<ProcessBean> ready1 = new ArrayList<ProcessBean>();
+		List<ProcessBean> blockedlist = new ArrayList<ProcessBean>();
+		List<ProcessBean> currentsortlist = new ArrayList<ProcessBean>();
+		int[] completiontime= new int[(processList.size()+1)];
+		ProcessBean current,noprocess=new ProcessBean(-1," "),previous =new ProcessBean(-1,"null");
+		
+		int count = 0,totalbursttime=0,totalrunningtime=0;
+		int[] bursttimeremaining=new int[processList.size()+1];
+		int[] bursttimeremaining1=new int[processList.size()+1];
 		for(count = 0;count<processList.size();count++)
 		{
-			
+			//bursttimeremaining1[processList.get(count).getPid()]=(int) (processList.get(count).getBurstList().get(0).getQuantum());
+			ready1.add(processList.get(count));
 			readylist.add(processList.get(count));
-		}
-		int i=1,j=1;
-		currentsortlist.add(processList.get(0));
-		while(i<processList.size())
-		{
-			if(processList.get(0).getArrivalTime().compareTo(processList.get(i).getArrivalTime())==0)
+			bursttimeremaining[processList.get(count).getPid()]=(int) processList.get(count).getBurstList().get(0).getQuantum();
+			bursttimeremaining1[processList.get(count).getPid()]=(int) processList.get(count).getBurstList().get(0).getQuantum();
+			if(count==0)
+			totalbursttime+=(processList.get(count).getBurstList().get(0).getQuantum()+processList.get(0).getArrivalTime().getMinutes());
+			else
+			{if(processList.get(count).getArrivalTime().getMinutes()>totalbursttime)
 			{
-				currentsortlist.add(processList.get(i));
-				
+				totalbursttime=processList.get(count).getArrivalTime().getMinutes()	;
 			}
-			
+			totalbursttime+=(processList.get(count).getBurstList().get(0).getQuantum());
+			}
+		}
+	
+		totalrunningtime=(int) (totalbursttime);
+		int k=0;
+		
+		
+		processintervalexecutiontime[] processinterval1=new processintervalexecutiontime[totalrunningtime];
+		for( int i=0; i<totalrunningtime;i++)
+			processinterval1[i]=new processintervalexecutiontime();
+		
+		int flag=1,s=-1;
+		int j;
+		int[] firsttime=new int[processList.size()+1];
+		int i=0;
+		while(i<processList.size()+1)
+		{firsttime[i]=0;
 			i++;
 		}
-		Collections.sort(currentsortlist, new BurstTimeComparator());
-		for(count = 0;count<processList.size();count++)
+		readylist.clear();
+		k=0;
+		int noofprocessintime;
+		noofprocessintime=0;
+	int enter;
+	enter=0;
+		
+		for(i=processList.get(0).getArrivalTime().getMinutes();i<totalrunningtime;i++)
 		{
-			if(currentsortlist.get(0).getPid()==readylist.get(count).getPid())
+			
+			if(enter==0)	
 			{
-				j=count;
-				
+			for(j=0;j<processList.size();j++)
+			{
+				if (i>=(processList.get(j).getArrivalTime().getMinutes()))
+				{noofprocessintime++;
+					currentsortlist.add(processList.get(j));
+					readylist.add(processList.get(j));
+				}
 			}
-		
-		}
-		orderofprocesscomplete.add(readylist.get(j));
-		
-		readylist.remove(j);
-		current=new ProcessBean(currentsortlist.get(0).getPid(),currentsortlist.get(0).getpName());
-		current.setArrivalTime(currentsortlist.get(0).getArrivalTime());
-		current.setBurstList(currentsortlist.get(0).getBurstList());
-		int time = 3;
-		SnapShotUtility.ViewSnapHot(readylist, current, blockedlist, time);		
-		i=1;
-		
-		while(readylist.size()>0)
-		{
-			currentsortlist.clear();
-			int flag;
-			flag=0;
-			for(count = 0;count<(readylist.size());count++)
+			if(noofprocessintime!=0)
 			{
-				if((current.getArrivalTime().getMinutes()+current.getBurstList().get(0).getQuantum())>=(readylist.get(count).getArrivalTime().getMinutes()))
+			Collections.sort(readylist, new ArrivalTimeComparator());
+			Collections.sort(readylist, new BurstTimeComparator());
+			
+			
+			
+			
+			
+			for(count = 0;count<processList.size();count++)
+			{
+				if(readylist.get(0).getPid()==processList.get(count).getPid())
 				{
+					s=count;
 					
-					currentsortlist.add(readylist.get(count));
-					flag=1;
 				}
 			
 			}
-			if(flag==1)
-			{
-				
-			Collections.sort(currentsortlist, new BurstTimeComparator());
-			for(count = 0;count<(readylist.size());count++)
-			{
-				if(currentsortlist.get(0).getPid()==readylist.get(count).getPid())
-				{j=count;
-					break;
-				}
+			orderofprocesscomplete.add(readylist.get(0));
+			processList.remove(s);
 			
-			}
-			orderofprocesscomplete.add(readylist.get(j));
-			readylist.remove(j);
-			current=new ProcessBean(currentsortlist.get(0).getPid(),currentsortlist.get(0).getpName());
-			current.setArrivalTime(currentsortlist.get(0).getArrivalTime());
-			current.setBurstList(currentsortlist.get(0).getBurstList());
-	
+			current=new ProcessBean(readylist.get(0).getPid(),readylist.get(0).getpName());
+			current.setArrivalTime(readylist.get(0).getArrivalTime());
 			
+			if(firsttime[readylist.get(0).getPid()]==0)
+			{
+			bursttimeremaining[readylist.get(0).getPid()]=(int) (readylist.get(0).getBurstList().get(0).getQuantum()-1);
+			firsttime[readylist.get(0).getPid()]=1;
+			readylist.get(0).getBurstList().get(0).setQuantum(bursttimeremaining[readylist.get(0).getPid()]);
 			}
 			else
 			{
-				Collections.sort(readylist,  new BurstTimeComparator());
-			
-			current=new ProcessBean(readylist.get(0).getPid(),readylist.get(0).getpName());	
-			current.setArrivalTime(readylist.get(0).getArrivalTime());
+				bursttimeremaining[readylist.get(0).getPid()]=bursttimeremaining[readylist.get(0).getPid()]-1;
+			}
 			current.setBurstList(readylist.get(0).getBurstList());
-			orderofprocesscomplete.add(readylist.get(0));
+			current.setPriority(readylist.get(0).getPriority());
 			readylist.remove(0);
+			SnapShotUtility.ViewSnapHot(readylist, current, blockedlist, i);
+			
+			
+			
+			
+			if(flag==1)
+			{processinterval1[k].setPid(current.getPid());
+			processinterval1[k].setArrivaltime(i);
+			processinterval1[k].setPname(current.getpName());
+			processinterval1[k].setFinishtime(i+1);
+				flag=0;
+				previous=current;
+				enter=1;
+				
+			}
+			else if(current.getPid()==previous.getPid())
+			{
+				processinterval1[k].setFinishtime(i+1);
 			
 			}
-			i++;	
-			SnapShotUtility.ViewSnapHot(readylist, current, blockedlist, time);
-			
-		}
-		ProcessOutputParamaters outputparameters;
-		outputparameters = CalculateParameters(orderofprocesscomplete);
-		return outputparameters;
-	}
-	
-	
-	@SuppressWarnings("deprecation")
-	public ProcessOutputParamaters CalculateParameters(List<ProcessBean> processlist)
-	{int count;
+			else
+			{k++;
+				processinterval1[k].setPid(current.getPid());
+				processinterval1[k].setPname(current.getpName());
+			processinterval1[k].setArrivaltime(i);
 		
-	ProcessOutputParamaters outputparameters = new ProcessOutputParamaters();	
-	float waitingtime,totalwaitingtime = 0,bursttime,totalbursttime,turnaroundtime,totalturnaroundtime = 0;		
-		List<OutputProcessBean>ProcessoutputList;
-		if (!processlist.isEmpty())
+			processinterval1[k].setFinishtime(i+1);
+			previous=current;
+			enter=1;
+			}
+			
+			if(bursttimeremaining[current.getPid()]==0)
+			{
+			completiontime[current.getPid()]=i+1;
+			orderofprocess.add(current);
+			enter=0;
+			}
+			
+			currentsortlist.clear();
+			readylist.clear();
+			noofprocessintime=0;
+			}
+			else
+			{//current=null;previous=null;
+				if(noprocess.getPid()==previous.getPid())
+				{
+					processinterval1[k].setFinishtime(i+1);
+				
+				}
+				else{
+					k++;
+				
+				processinterval1[k].setPid(noprocess.getPid());
+				processinterval1[k].setPname(noprocess.getpName());
+			processinterval1[k].setArrivaltime(i);
+		
+			processinterval1[k].setFinishtime(i+1);
+			previous=noprocess;
+			}
+				SnapShotUtility.ViewSnapHot(readylist,noprocess, blockedlist, i);
+			}
+			}
+			else
+			{
+				
+				for(j=0;j<processList.size();j++)
+				{
+					if (i>=(processList.get(j).getArrivalTime().getMinutes()))
+					{noofprocessintime++;
+						currentsortlist.add(processList.get(j));
+						readylist.add(processList.get(j));
+					}
+				}
+				Collections.sort(readylist, new ArrivalTimeComparator());
+				Collections.sort(readylist, new BurstTimeComparator());
+				
+				SnapShotUtility.ViewSnapHot(readylist, previous, blockedlist, i);
+				processinterval1[k].setFinishtime(i+1);
+				bursttimeremaining[previous.getPid()]=bursttimeremaining[previous.getPid()]-1;
+				if(bursttimeremaining[previous.getPid()]==0)
+				{
+				completiontime[previous.getPid()]=i+1;
+				orderofprocess.add(previous);
+				enter=0;
+				}
+				
+				
+				currentsortlist.clear();
+				readylist.clear();
+				
+			}
+			
+			
+			if((i+1)==totalrunningtime)
+			{
+				//current=null;
+				SnapShotUtility.ViewSnapHot(readylist,noprocess, blockedlist, (i+1));
+			}
+		}
+		
+		
+		
+		System.out.println("Order in which process completed");
+		for(count = 0;count<orderofprocess.size();count++)
 		{
+			
+			System.out.println(orderofprocess.get(count).getpName()+" "+orderofprocess.get(count).getArrivalTime().getMinutes()+" "+completiontime[orderofprocess.get(count).getPid()]);
+		}	
+		
+		processintervalexecutiontime[] processinterval=new processintervalexecutiontime[(k+1)];
+	
+		System.out.println("Order in which process executed with time");
+		for(count = 0;count<=k;count++)
+		{processinterval[count]=new processintervalexecutiontime();
+		processinterval[count].setArrivaltime(processinterval1[count].getArrivaltime());
+		processinterval[count].setFinishtime(processinterval1[count].getFinishtime());
+		processinterval[count].setPid(processinterval1[count].getPid());
+		processinterval[count].setPname(processinterval1[count].getPname());
+			
+			System.out.println(processinterval1[count].getArrivaltime()+" "+processinterval1[count].getPid()+" "+processinterval1[count].getFinishtime());
+		}
+		
+		for(int count1 = 0;count1<orderofprocess.size();count1++)
+		{
+			
+			orderofprocess.get(count1).getBurstList().get(0).setQuantum(bursttimeremaining1[orderofprocess.get(count1).getPid()]);
+				
+			
+			
+						
+		}
+		
+		float waitingtime,bursttime,turnaroundtime;
+		float totalwaitingtime = 0,totalturnaroundtime = 0;
+		totalbursttime=0;
+		
+		
+		List<OutputProcessBean>ProcessoutputList;
+		
+		
 			OutputProcessBean processoutput;
 			ProcessoutputList = new ArrayList<OutputProcessBean>();
-			processoutput = new OutputProcessBean(processlist.get(0).getPid(),processlist.get(0).getpName());
-			processoutput.setWaitingTime(0);
-			processoutput.setCompletiontime(processlist.get(0).getBurstList().get(0).getQuantum()+processlist.get(0).getArrivalTime().getMinutes());
-			processoutput.setTurnaroundTime(processlist.get(0).getBurstList().get(0).getQuantum());
-			totalbursttime = processlist.get(0).getBurstList().get(0).getQuantum();
+			for( count = 0;count<orderofprocess.size();count++)
+			{
+			processoutput = new OutputProcessBean(orderofprocess.get(count).getPid(),orderofprocess.get(count).getpName());
+			bursttime = orderofprocess.get(count).getBurstList().get(0).getQuantum();
+			 totalbursttime = (int) bursttime;
 			
-			processoutput.setArrivalTime(processlist.get(0).getArrivalTime());
-			processoutput.setBurstList(processlist.get(0).getBurstList());
+			waitingtime = completiontime[orderofprocess.get(count).getPid()]- orderofprocess.get(count).getArrivalTime().getMinutes()-bursttime ;
+			totalwaitingtime+=waitingtime; 
+			
+			
+			
+			processoutput.setWaitingTime(waitingtime);
+			processoutput.setCompletiontime((completiontime[orderofprocess.get(count).getPid()]));
+			processoutput.setTurnaroundTime(processoutput.getCompletiontime()-orderofprocess.get(count).getArrivalTime().getMinutes());
+			processoutput.setArrivalTime(orderofprocess.get(count).getArrivalTime());
+			processoutput.setBurstList(orderofprocess.get(count).getBurstList());
+		
+			
+			
+			
 			
 			ProcessoutputList.add(processoutput);
+			turnaroundtime =(processoutput.getCompletiontime()-orderofprocess.get(count).getArrivalTime().getMinutes());
+			totalturnaroundtime += turnaroundtime;
+			processoutput.setArrivalTime(orderofprocess.get(count).getArrivalTime());
+			processoutput.setBurstList(orderofprocess.get(count).getBurstList());
+
 			
-			totalturnaroundtime += totalbursttime;
-			
-			for(count = 1;count<processlist.size();count++)
-			{
-				processoutput = new OutputProcessBean(processlist.get(count).getPid(),processlist.get(count).getpName());
-				bursttime = processlist.get(count).getBurstList().get(0).getQuantum();
-				totalbursttime += bursttime;
-				waitingtime = totalbursttime+processlist.get(0).getArrivalTime().getMinutes() - processlist.get(count).getArrivalTime().getMinutes()-bursttime ;
-				totalwaitingtime+=waitingtime; 
+				System.out.println(orderofprocess.get(count).getpName()+" "+processoutput.getWaitingTime()+" "+processoutput.getCompletiontime()+" "+processoutput.getTurnaroundTime());
 				
-				processoutput.setArrivalTime(processlist.get(count).getArrivalTime());
-				processoutput.setBurstList(processlist.get(count).getBurstList());
-				
-				processoutput.setWaitingTime(waitingtime);
-				processoutput.setCompletiontime(totalbursttime+processlist.get(0).getArrivalTime().getMinutes());
-				processoutput.setTurnaroundTime(processoutput.getCompletiontime()-processlist.get(count).getArrivalTime().getMinutes());
-											
-				ProcessoutputList.add(processoutput);
-				turnaroundtime =(processoutput.getCompletiontime()-processlist.get(count).getArrivalTime().getMinutes());
-				totalturnaroundtime += turnaroundtime;
-				
-				
-											
 			} 
+			
+			
+			
+			
+			ProcessOutputParamaters outputparameters = new ProcessOutputParamaters();
 			outputparameters.setProcessoutputList(ProcessoutputList);
 			outputparameters.setAveragewaitingTime(totalwaitingtime/count);
 			outputparameters.setNetTurnaroundTime(totalturnaroundtime/count);
-		}
-		
-		
-		return outputparameters;
-	}
+			outputparameters.setProcessinterval(processinterval);
+			return outputparameters;
+			
+}
+
 }
